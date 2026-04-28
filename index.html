@@ -14,6 +14,44 @@
         });
   </script>
 </head>
+<body>
+<button id="fsButton" onclick="toggleFullscreen()" style="
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
+    cursor: pointer;
+    font-size: 20px;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.3s;
+">
+    &#x2922; <!-- Unicode for top-right expanding arrows -->
+</button>
+
+<script>
+function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+    } else if (document.exitFullscreen) {
+        document.exitFullscreen();
+    }
+}
+
+// Hide/Show button based on fullscreen change event
+document.addEventListener('fullscreenchange', () => {
+    const btn = document.getElementById('fsButton');
+    btn.style.display = document.fullscreenElement ? 'none' : 'flex';
+});
+</script>
 <video width="100%" height="100%" autoplay muted loop playsinline>
   <source src="hellowhere.mp4" type="video/mp4">
 </video>
+</body>
