@@ -1,11 +1,18 @@
 <head>
-  <title>𝐒𝐄𝐂𝐔𝐑𝐋𝐘__.𝐞𝐱𝐞⚠</title>
+  <title>⚠ Class session is active ⚠ - 𝐒𝐄𝐂𝐔𝐑𝐋𝐘.𝐞𝐱𝐞</title>
   <link rel="icon" type="image/png" href="secure.png">
   <style>
     body {
       background-color: black;
     }
   </style>
+  <script>
+        document.addEventListener('keydown', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            }
+        });
+  </script>
 </head>
 <video width="100%" height="100%" autoplay muted loop playsinline>
   <source src="hellowhere.mp4" type="video/mp4">
