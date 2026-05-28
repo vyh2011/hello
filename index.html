@@ -13,6 +13,97 @@
             }
         });
   </script>
+<!-- ========================================== -->
+<!-- SPACEBAR TAB DISGUISE SYSTEM START        -->
+<!-- ========================================== -->
+<script>
+(function() {
+    // 1. System Configuration
+    const stateA = {
+        title: "Securly Classroom - Class session is active",
+        icon: "secure.png"
+    };
+    const stateB = {
+        title: "Home - Classroom",
+        icon: "classroom.png"
+    };
+
+    let isDisguised = false; // Tracks which state is currently active
+    let spaceTimer = null;   // Tracks the 1-second hold duration
+    let isHolding = false;   // Prevents the browser from auto-repeating the timer
+
+    // 2. Icon Changer Utility
+    function changeFavicon(src) {
+        let link = document.querySelector("link[rel*='icon']");
+        
+        if (!link) {
+            link = document.createElement('link');
+            link.type = 'image/x-icon';
+            link.rel = 'shortcut icon';
+            document.getElementsByTagName('head')[0].appendChild(link);
+        }
+        
+        link.href = src;
+    }
+
+    // 3. Force Initial State on Startup
+    // This executes immediately when the script runs to guarantee State A loads first
+    function setInitialState() {
+        document.title = stateA.title;
+        changeFavicon(stateA.icon);
+        isDisguised = false;
+    }
+    
+    // Run immediately, and run again once the full DOM tree structure is ready
+    setInitialState();
+    document.addEventListener('DOMContentLoaded', setInitialState);
+
+    // 4. Master Toggle Execution
+    function toggleTabIdentity() {
+        if (!isDisguised) {
+            document.title = stateB.title;
+            changeFavicon(stateB.icon);
+            isDisguised = true;
+        } else {
+            document.title = stateA.title;
+            changeFavicon(stateA.icon);
+            isDisguised = false;
+        }
+    }
+
+    // 5. Keyboard Event Listeners
+    window.addEventListener('keydown', (e) => {
+        if (e.key === ' ' || e.code === 'Space') {
+            // Prevent page scrolling when holding down spacebar
+            e.preventDefault(); 
+            
+            if (isHolding) return; 
+            isHolding = true;
+
+            // Start 1-second timer countdown
+            spaceTimer = setTimeout(() => {
+                toggleTabIdentity();
+            }, 1000);
+        }
+    });
+
+    window.addEventListener('keyup', (e) => {
+        if (e.key === ' ' || e.code === 'Space') {
+            isHolding = false;
+            clearTimeout(spaceTimer);
+        }
+    });
+
+    window.addEventListener('blur', () => {
+        isHolding = false;
+        clearTimeout(spaceTimer);
+    });
+})();
+</script>
+<!-- ========================================== -->
+<!-- SPACEBAR TAB DISGUISE SYSTEM END          -->
+<!-- ========================================== -->
+
 </head>
 <body>
 <video width="100%" height="100%" autoplay muted loop playsinline>
