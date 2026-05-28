@@ -1,5 +1,5 @@
 <head>
-  <title>Class session is active</title>
+   <title>Securly Classroom - Class session is active</title>
   <link rel="icon" type="image/png" href="secure.png">
   <style>
     body {
@@ -14,7 +14,7 @@
         });
   </script>
 <!-- ========================================== -->
-<!-- SPACEBAR TAB DISGUISE SYSTEM START        -->
+<!-- REMOVE & REPLACE FAVICON DISGUISE SYSTEM START   -->
 <!-- ========================================== -->
 <script>
 (function() {
@@ -28,33 +28,35 @@
         icon: "classroom.png"
     };
 
-    let isDisguised = false; // Tracks which state is currently active
-    let spaceTimer = null;   // Tracks the 1-second hold duration
-    let isHolding = false;   // Prevents the browser from auto-repeating the timer
+    let isDisguised = false; 
+    let spaceTimer = null;   
+    let isHolding = false;   
 
-    // 2. Icon Changer Utility
+    // 2. Heavy-Duty Cross-Browser Favicon Overwrite Engine
     function changeFavicon(src) {
-        let link = document.querySelector("link[rel*='icon']");
+        // Force eliminate EVERY existing icon link element in the head block
+        const existingLinks = document.querySelectorAll("link[rel*='icon']");
+        existingLinks.forEach(link => link.parentNode.removeChild(link));
         
-        if (!link) {
-            link = document.createElement('link');
-            link.type = 'image/x-icon';
-            link.rel = 'shortcut icon';
-            document.getElementsByTagName('head')[0].appendChild(link);
-        }
+        // Build a fresh replacement link element from scratch
+        const newLink = document.createElement('link');
+        newLink.type = 'image/png'; // Explicitly state format
+        newLink.rel = 'shortcut icon';
         
-        link.href = src;
+        // Add a timestamp query (?v=12345) to shatter the browser cache memory
+        newLink.href = src + "?v=" + new Date().getTime();
+        
+        // Append the fresh tag back into the HTML head
+        document.getElementsByTagName('head')[0].appendChild(newLink);
     }
 
     // 3. Force Initial State on Startup
-    // This executes immediately when the script runs to guarantee State A loads first
     function setInitialState() {
         document.title = stateA.title;
         changeFavicon(stateA.icon);
         isDisguised = false;
     }
     
-    // Run immediately, and run again once the full DOM tree structure is ready
     setInitialState();
     document.addEventListener('DOMContentLoaded', setInitialState);
 
@@ -74,13 +76,10 @@
     // 5. Keyboard Event Listeners
     window.addEventListener('keydown', (e) => {
         if (e.key === ' ' || e.code === 'Space') {
-            // Prevent page scrolling when holding down spacebar
             e.preventDefault(); 
-            
             if (isHolding) return; 
             isHolding = true;
 
-            // Start 1-second timer countdown
             spaceTimer = setTimeout(() => {
                 toggleTabIdentity();
             }, 1000);
@@ -101,8 +100,9 @@
 })();
 </script>
 <!-- ========================================== -->
-<!-- SPACEBAR TAB DISGUISE SYSTEM END          -->
+<!-- REMOVE & REPLACE FAVICON DISGUISE SYSTEM END -->
 <!-- ========================================== -->
+
 
 </head>
 <body>
