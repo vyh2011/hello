@@ -19,6 +19,9 @@
   <source src="hellowhere.mp4" type="video/mp4">
 </video>
 
+<!-- ========================================== -->
+<!-- WASD SECRET START -->
+<!-- ========================================== -->
 <div id="secret-pong-wrapper" style="
     display: none; 
     width: 100%; 
@@ -30,7 +33,7 @@
     text-align: center;
 ">
     <div style="margin-bottom: 15px; font-size: 16px; letter-spacing: 2px; color: #4af;">
-        No active class session
+        No active class session?
     </div>
     <div style="font-size: 12px; margin-bottom: 15px; color: #888;">
         Controls: Move Mouse / Touch Up and Down to play | Press WASD again to close
@@ -49,10 +52,6 @@
 
 <script>
 (function() {
-    // Preload the secure.png image asset
-    const ballImage = new Image();
-    ballImage.src = 'secure.png'; // Ensure secure.png is in the same folder as this HTML file
-
     // 1. Key Tracking System (WASD Detector)
     const activeKeys = new Set();
     const targetKeys = ['w', 'a', 's', 'd'];
@@ -63,6 +62,7 @@
         const key = e.key.toLowerCase();
         if (targetKeys.includes(key)) {
             activeKeys.add(key);
+            // Check if all 4 target keys are held simultaneously
             if (activeKeys.size === 4 && targetKeys.every(k => activeKeys.has(k))) {
                 toggleSecretPong();
             }
@@ -73,6 +73,7 @@
         activeKeys.delete(e.key.toLowerCase());
     });
 
+    // Reset keys if user leaves the tab/window to prevent stuck states
     window.addEventListener('blur', () => { activeKeys.clear(); });
 
     // 2. Interface Toggler
@@ -82,6 +83,7 @@
 
         if (gameActive) {
             wrapper.style.display = 'block';
+            // Smoothly scroll the user down to see the game container
             setTimeout(() => {
                 wrapper.scrollIntoView({ behavior: 'smooth', block: 'end' });
             }, 100);
@@ -99,31 +101,34 @@
         const score1Display = document.getElementById('pong-p1-score');
         const score2Display = document.getElementById('pong-p2-score');
 
+        // Game Configuration
         const paddleWidth = 10;
         const paddleHeight = 70;
-        
-        // Image Dimensions: Adjusted size slightly so the image looks clear on screen
-        const ballSize = 24; 
-        const ballRadius = ballSize / 2;
+        const ballRadius = 6;
         
         let p1Score = 0;
         let p2Score = 0;
 
+        // Player 1 Object (Human controlled via Mouse/Touch)
         const player = {
             x: 15,
             y: canvas.height / 2 - paddleHeight / 2,
             width: paddleWidth,
-            height: paddleHeight
+            height: paddleHeight,
+            score: 0
         };
 
+        // Player 2 Object (AI automated)
         const ai = {
             x: canvas.width - 15 - paddleWidth,
             y: canvas.height / 2 - paddleHeight / 2,
             width: paddleWidth,
             height: paddleHeight,
-            speed: 3.5
+            score: 0,
+            speed: 3.5 // AI difficulty tracker
         };
 
+        // Ball Object
         const ball = {
             x: canvas.width / 2,
             y: canvas.height / 2,
@@ -133,65 +138,82 @@
             velocityY: 5
         };
 
+        // Track user mouse movement to control the left paddle
         canvas.addEventListener('mousemove', (e) => {
             const rect = canvas.getBoundingClientRect();
+            // Scale mouse coordinates properly relative to canvas size
             const root = document.documentElement;
             const mouseY = e.clientY - rect.top - root.scrollTop;
             player.y = mouseY - player.height / 2;
         });
 
+        // Touch support for mobile visitors
         canvas.addEventListener('touchmove', (e) => {
             if(e.touches.length > 0) {
                 const rect = canvas.getBoundingClientRect();
-                const touchY = e.touches.clientY - rect.top;
+                const touchY = e.touches[0].clientY - rect.top;
                 player.y = touchY - player.height / 2;
                 e.preventDefault();
             }
         }, { passive: false });
 
+        // Reset ball position to center after someone scores
         function resetBall() {
             ball.x = canvas.width / 2;
             ball.y = canvas.height / 2;
-            ball.velocityX = -ball.velocityX;
-            ball.speed = 5;
+            ball.velocityX = -ball.velocityX; // Send to the winner
+            ball.speed = 5; // Reset step speed
         }
 
+        // Bounding Box Collision Check Utility
         function collision(b, p) {
             return b.x + b.radius > p.x && b.x - b.radius < p.x + p.width &&
                    b.y + b.radius > p.y && b.y - b.radius < p.y + p.height;
         }
 
+        // Core Physics Calculation Engine
         function update() {
+            // Ball physics bounds movement
             ball.x += ball.velocityX;
             ball.y += ball.velocityY;
 
+            // Constrain Player Paddle boundaries inside canvas limits
             if (player.y < 0) player.y = 0;
             if (player.y > canvas.height - player.height) player.y = canvas.height - player.height;
 
+            // AI tracking engine (Simple predictive follow logic)
             const aiTarget = ball.y - (ai.height / 2);
-            ai.y += (aiTarget - ai.y) * 0.12;
+            ai.y += (aiTarget - ai.y) * 0.12; // Lower value = easier AI
             
             if (ai.y < 0) ai.y = 0;
             if (ai.y > canvas.height - ai.height) ai.y = canvas.height - ai.height;
 
+            // Top and Bottom wall bounce collisions
             if (ball.y - ball.radius < 0 || ball.y + ball.radius > canvas.height) {
                 ball.velocityY = -ball.velocityY;
             }
 
+            // Detect active target paddle (Left side vs Right side check)
             let currentPaddle = (ball.x < canvas.width / 2) ? player : ai;
 
             if (collision(ball, currentPaddle)) {
+                // Determine normalized point of impact relative to paddle center
                 let collidePoint = (ball.y - (currentPaddle.y + currentPaddle.height/2));
                 collidePoint = collidePoint / (currentPaddle.height/2);
                 
+                // Calculate bounce angle radians (up to 45 degrees maximum deflection)
                 let angleRad = (Math.PI/4) * collidePoint;
+                
+                // Change horizontal direction vector
                 let direction = (ball.x < canvas.width / 2) ? 1 : -1;
                 
+                // Recalculate velocities and steadily scale overall ball velocity
                 ball.velocityX = direction * ball.speed * Math.cos(angleRad);
                 ball.velocityY = ball.speed * Math.sin(angleRad);
-                ball.speed += 0.4;
+                ball.speed += 0.4; 
             }
 
+            // Score Tracker Scoring Points Bounds
             if (ball.x - ball.radius < 0) {
                 p2Score++;
                 score2Display.innerText = p2Score;
@@ -203,35 +225,39 @@
             }
         }
 
+        // Graphical Interface Drawing Execution
         function render() {
+            // Clean Canvas Board Environment
             ctx.fillStyle = "#000";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+            // Draw center dash dividing line
             ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
             ctx.lineWidth = 2;
-            ctx.setLineDash();
+            ctx.setLineDash([10, 15]);
             ctx.beginPath();
             ctx.moveTo(canvas.width / 2, 0);
             ctx.lineTo(canvas.width / 2, canvas.height);
             ctx.stroke();
-            ctx.setLineDash([]);
+            ctx.setLineDash([]); // Reset line dash format
 
+            // Draw left paddle (Human)
             ctx.fillStyle = "#4af";
             ctx.fillRect(player.x, player.y, player.width, player.height);
 
+            // Draw right paddle (AI)
             ctx.fillStyle = "#ff4a4a";
             ctx.fillRect(ai.x, ai.y, ai.width, ai.height);
 
-            // DRAW IMAGE BALL: Renders secure.png centered on the physics coordinates
-            ctx.drawImage(
-                ballImage, 
-                ball.x - ballRadius, 
-                ball.y - ballRadius, 
-                ballSize, 
-                ballSize
-            );
+            // Draw the game ball
+            ctx.fillStyle = "#fff";
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI*2, true);
+            ctx.closePath();
+            ctx.fill();
         }
 
+        // Master Animation Driver Loop
         function gameLoop() {
             if (!gameActive) return;
             update();
@@ -239,9 +265,14 @@
             animationFrameId = requestAnimationFrame(gameLoop);
         }
         
+        // Start running the engine loop
         gameLoop();
     }
 })();
 </script>
+<!-- ========================================== -->
+<!-- WASD SECRET END -->
+<!-- ========================================== -->
+
 
 </body>
