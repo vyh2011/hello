@@ -18,4 +18,230 @@
 <video width="100%" height="100%" autoplay muted loop playsinline>
   <source src="hellowhere.mp4" type="video/mp4">
 </video>
+
+<div id="secret-pong-wrapper" style="
+    display: none; 
+    width: 100%; 
+    background: #111; 
+    padding: 30px 0; 
+    box-shadow: inset 0 10px 20px rgba(0,0,0,0.8);
+    font-family: monospace;
+    color: #fff;
+    text-align: center;
+">
+    <div style="margin-bottom: 15px; font-size: 16px; letter-spacing: 2px; color: #4af;">
+        No active class session
+    </div>
+    <div style="font-size: 12px; margin-bottom: 15px; color: #888;">
+        Controls: Move Mouse / Touch Up and Down to play | Press WASD again to close
+    </div>
+    
+    <div style="position: relative; display: inline-block; background: #000; border: 4px solid #4af; border-radius: 8px; box-shadow: 0 0 20px rgba(74,175,255,0.3);">
+        <!-- Score Board -->
+        <div style="position: absolute; width: 100%; top: 20px; display: flex; justify-content: space-around; font-size: 32px; font-weight: bold; pointer-events: none; opacity: 0.7;">
+            <div id="pong-p1-score">0</div>
+            <div id="pong-p2-score">0</div>
+        </div>
+        <!-- Game Canvas -->
+        <canvas id="pongCanvas" width="600" height="350" style="display: block; max-width: 100%; cursor: none;"></canvas>
+    </div>
+</div>
+
+<script>
+(function() {
+    // Preload the secure.png image asset
+    const ballImage = new Image();
+    ballImage.src = 'secure.png'; // Ensure secure.png is in the same folder as this HTML file
+
+    // 1. Key Tracking System (WASD Detector)
+    const activeKeys = new Set();
+    const targetKeys = ['w', 'a', 's', 'd'];
+    let gameActive = false;
+    let animationFrameId = null;
+
+    window.addEventListener('keydown', (e) => {
+        const key = e.key.toLowerCase();
+        if (targetKeys.includes(key)) {
+            activeKeys.add(key);
+            if (activeKeys.size === 4 && targetKeys.every(k => activeKeys.has(k))) {
+                toggleSecretPong();
+            }
+        }
+    });
+
+    window.addEventListener('keyup', (e) => {
+        activeKeys.delete(e.key.toLowerCase());
+    });
+
+    window.addEventListener('blur', () => { activeKeys.clear(); });
+
+    // 2. Interface Toggler
+    function toggleSecretPong() {
+        const wrapper = document.getElementById('secret-pong-wrapper');
+        gameActive = !gameActive;
+
+        if (gameActive) {
+            wrapper.style.display = 'block';
+            setTimeout(() => {
+                wrapper.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            }, 100);
+            initPong();
+        } else {
+            wrapper.style.display = 'none';
+            cancelAnimationFrame(animationFrameId);
+        }
+    }
+
+    // 3. Mini Pong Engine
+    function initPong() {
+        const canvas = document.getElementById('pongCanvas');
+        const ctx = canvas.getContext('2d');
+        const score1Display = document.getElementById('pong-p1-score');
+        const score2Display = document.getElementById('pong-p2-score');
+
+        const paddleWidth = 10;
+        const paddleHeight = 70;
+        
+        // Image Dimensions: Adjusted size slightly so the image looks clear on screen
+        const ballSize = 24; 
+        const ballRadius = ballSize / 2;
+        
+        let p1Score = 0;
+        let p2Score = 0;
+
+        const player = {
+            x: 15,
+            y: canvas.height / 2 - paddleHeight / 2,
+            width: paddleWidth,
+            height: paddleHeight
+        };
+
+        const ai = {
+            x: canvas.width - 15 - paddleWidth,
+            y: canvas.height / 2 - paddleHeight / 2,
+            width: paddleWidth,
+            height: paddleHeight,
+            speed: 3.5
+        };
+
+        const ball = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            radius: ballRadius,
+            speed: 5,
+            velocityX: 5,
+            velocityY: 5
+        };
+
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const root = document.documentElement;
+            const mouseY = e.clientY - rect.top - root.scrollTop;
+            player.y = mouseY - player.height / 2;
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            if(e.touches.length > 0) {
+                const rect = canvas.getBoundingClientRect();
+                const touchY = e.touches.clientY - rect.top;
+                player.y = touchY - player.height / 2;
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        function resetBall() {
+            ball.x = canvas.width / 2;
+            ball.y = canvas.height / 2;
+            ball.velocityX = -ball.velocityX;
+            ball.speed = 5;
+        }
+
+        function collision(b, p) {
+            return b.x + b.radius > p.x && b.x - b.radius < p.x + p.width &&
+                   b.y + b.radius > p.y && b.y - b.radius < p.y + p.height;
+        }
+
+        function update() {
+            ball.x += ball.velocityX;
+            ball.y += ball.velocityY;
+
+            if (player.y < 0) player.y = 0;
+            if (player.y > canvas.height - player.height) player.y = canvas.height - player.height;
+
+            const aiTarget = ball.y - (ai.height / 2);
+            ai.y += (aiTarget - ai.y) * 0.12;
+            
+            if (ai.y < 0) ai.y = 0;
+            if (ai.y > canvas.height - ai.height) ai.y = canvas.height - ai.height;
+
+            if (ball.y - ball.radius < 0 || ball.y + ball.radius > canvas.height) {
+                ball.velocityY = -ball.velocityY;
+            }
+
+            let currentPaddle = (ball.x < canvas.width / 2) ? player : ai;
+
+            if (collision(ball, currentPaddle)) {
+                let collidePoint = (ball.y - (currentPaddle.y + currentPaddle.height/2));
+                collidePoint = collidePoint / (currentPaddle.height/2);
+                
+                let angleRad = (Math.PI/4) * collidePoint;
+                let direction = (ball.x < canvas.width / 2) ? 1 : -1;
+                
+                ball.velocityX = direction * ball.speed * Math.cos(angleRad);
+                ball.velocityY = ball.speed * Math.sin(angleRad);
+                ball.speed += 0.4;
+            }
+
+            if (ball.x - ball.radius < 0) {
+                p2Score++;
+                score2Display.innerText = p2Score;
+                resetBall();
+            } else if (ball.x + ball.radius > canvas.width) {
+                p1Score++;
+                score1Display.innerText = p1Score;
+                resetBall();
+            }
+        }
+
+        function render() {
+            ctx.fillStyle = "#000";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
+            ctx.lineWidth = 2;
+            ctx.setLineDash();
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, 0);
+            ctx.lineTo(canvas.width / 2, canvas.height);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            ctx.fillStyle = "#4af";
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+
+            ctx.fillStyle = "#ff4a4a";
+            ctx.fillRect(ai.x, ai.y, ai.width, ai.height);
+
+            // DRAW IMAGE BALL: Renders secure.png centered on the physics coordinates
+            ctx.drawImage(
+                ballImage, 
+                ball.x - ballRadius, 
+                ball.y - ballRadius, 
+                ballSize, 
+                ballSize
+            );
+        }
+
+        function gameLoop() {
+            if (!gameActive) return;
+            update();
+            render();
+            animationFrameId = requestAnimationFrame(gameLoop);
+        }
+        
+        gameLoop();
+    }
+})();
+</script>
+
 </body>
