@@ -4,13 +4,13 @@
     <title>Securly Classroom - Class session is active</title>
     <link rel="icon" type="image/png" href="secure.png">
     <style>
-        body, html { 
-            background-color: black; 
-            margin: 0; 
-            padding: 0; 
-            width: 100%; 
-            height: 100%; 
-            overflow: hidden; 
+        body, html {
+            background-color: black;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
         }
         #bg-video {
             position: absolute;
@@ -39,15 +39,15 @@
 
     <!-- Hidden Overlay Panel -->
     <div id="secret-pong-wrapper" style="
-        display: none; 
-        position: absolute; 
-        top: 0; 
-        left: 0; 
-        width: 100%; 
-        height: 100%; 
-        z-index: 2; 
-        pointer-events: none; 
-        font-family: monospace; 
+        display: none;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 2;
+        pointer-events: none;
+        font-family: monospace;
         color: rgba(255, 255, 255, 0.5);
     ">
         <!-- Floating Score Board Overlay -->
@@ -61,11 +61,11 @@
             position: absolute;
             top: 0;
             left: 0;
-            width: 100%; 
+            width: 100%;
             height: 100%;
-            display: block; 
+            display: block;
             cursor: none;
-            pointer-events: auto; 
+            pointer-events: auto;
         "></canvas>
     </div>
 
@@ -90,6 +90,10 @@
             } else {
                 wrapper.style.display = 'none';
                 cancelAnimationFrame(animationFrameId);
+                
+                // Reset text displays when game closes
+                document.getElementById('pong-p1-score').innerText = "0";
+                document.getElementById('pong-p2-score').innerText = "0";
             }
         }
 
@@ -103,13 +107,14 @@
             canvas.height = window.innerHeight;
 
             const paddleWidth = 6;
-            const paddleHeight = window.innerHeight * 0.18; 
+            const paddleHeight = window.innerHeight * 0.18;
             const ballRadius = 10;
+
             let p1Score = 0;
             let p2Score = 0;
 
             const player = {
-                x: 25, 
+                x: 25,
                 y: canvas.height / 2 - paddleHeight / 2,
                 width: paddleWidth,
                 height: paddleHeight,
@@ -117,12 +122,12 @@
             };
 
             const ai = {
-                x: canvas.width - 25 - paddleWidth, 
+                x: canvas.width - 25 - paddleWidth,
                 y: canvas.height / 2 - paddleHeight / 2,
                 width: paddleWidth,
                 height: paddleHeight,
                 score: 0,
-                speed: 6.5 
+                speed: 6.5
             };
 
             const ball = {
@@ -162,8 +167,8 @@
             function resetBall() {
                 ball.x = canvas.width / 2;
                 ball.y = canvas.height / 2;
-                ball.velocityX = -ball.velocityX; 
-                ball.speed = 7; 
+                ball.velocityX = -ball.velocityX;
+                ball.speed = 7;
             }
 
             function collision(b, p) {
@@ -179,7 +184,7 @@
                 if (player.y > canvas.height - player.height) player.y = canvas.height - player.height;
 
                 const aiTarget = ball.y - (ai.height / 2);
-                ai.y += (aiTarget - ai.y) * 0.11; 
+                ai.y += (aiTarget - ai.y) * 0.11;
 
                 if (ai.y < 0) ai.y = 0;
                 if (ai.y > canvas.height - ai.height) ai.y = canvas.height - ai.height;
@@ -197,7 +202,7 @@
                     let direction = (ball.x < canvas.width / 2) ? 1 : -1;
                     ball.velocityX = direction * ball.speed * Math.cos(angleRad);
                     ball.velocityY = ball.speed * Math.sin(angleRad);
-                    ball.speed += 0.5; 
+                    ball.speed += 0.5;
                 }
 
                 if (ball.x - ball.radius < 0) {
@@ -213,8 +218,7 @@
 
             function render() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-                // Fullscreen center dividing line
+                
                 ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
                 ctx.lineWidth = 2;
                 ctx.setLineDash([15, 20]);
@@ -222,17 +226,14 @@
                 ctx.moveTo(canvas.width / 2, 0);
                 ctx.lineTo(canvas.width / 2, canvas.height);
                 ctx.stroke();
-                ctx.setLineDash([]); 
+                ctx.setLineDash([]);
 
-                // Left paddle (Slightly darker red)
                 ctx.fillStyle = "rgba(180, 20, 20, 0.7)";
                 ctx.fillRect(player.x, player.y, player.width, player.height);
 
-                // Right paddle (Slightly darker red)
                 ctx.fillStyle = "rgba(180, 20, 20, 0.7)";
                 ctx.fillRect(ai.x, ai.y, ai.width, ai.height);
 
-                // Game ball
                 ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
                 ctx.beginPath();
                 ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI*2, true);
