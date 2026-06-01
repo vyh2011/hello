@@ -4,7 +4,7 @@
     <title>Securly Classroom - Class session is active</title>
     <link rel="icon" type="image/png" href="secure.png">
     <style>
-        /* Forces the page to completely hide scroll bars and fit the video perfectly */
+        /* Forces everything to stretch to the maximum window boundaries */
         body, html { 
             background-color: black; 
             margin: 0; 
@@ -39,7 +39,7 @@
         <source src="hellowhere.mp4" type="video/mp4">
     </video>
 
-    <!-- Hidden Overlay Panel (Sits perfectly transparent on top of the video) -->
+    <!-- Hidden Overlay Panel -->
     <div id="secret-pong-wrapper" style="
         display: none; 
         position: absolute; 
@@ -53,19 +53,19 @@
         color: #fff;
     ">
         <!-- Floating Score Board Overlay -->
-        <div style="position: absolute; width: 100%; top: 40px; display: flex; justify-content: space-around; font-size: 36px; font-weight: bold; pointer-events: none; opacity: 0.8; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+        <div style="position: absolute; width: 100%; top: 40px; display: flex; justify-content: space-around; font-size: 48px; font-weight: bold; pointer-events: none; opacity: 0.8; text-shadow: 0 2px 4px rgba(0,0,0,0.6);">
             <div id="pong-p1-score">0</div>
             <div id="pong-p2-score">0</div>
         </div>
 
-        <!-- Transparent Game Canvas centered perfectly -->
-        <canvas id="pongCanvas" width="600" height="350" style="
+        <!-- Full-Window Transparent Game Canvas -->
+        <canvas id="pongCanvas" style="
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            top: 0;
+            left: 0;
+            width: 100%; 
+            height: 100%;
             display: block; 
-            max-width: 100%; 
             cursor: none;
             pointer-events: auto; 
         "></canvas>
@@ -117,14 +117,18 @@
             const score1Display = document.getElementById('pong-p1-score');
             const score2Display = document.getElementById('pong-p2-score');
 
-            const paddleWidth = 10;
-            const paddleHeight = 70;
-            const ballRadius = 6;
+            // Set the canvas graphics resolution to perfectly match your actual browser window size
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const paddleWidth = 12;
+            const paddleHeight = window.innerHeight * 0.18; // Paddles scale proportionally to window height
+            const ballRadius = 8;
             let p1Score = 0;
             let p2Score = 0;
 
             const player = {
-                x: 15,
+                x: 25, // Distance from left edge
                 y: canvas.height / 2 - paddleHeight / 2,
                 width: paddleWidth,
                 height: paddleHeight,
@@ -132,22 +136,32 @@
             };
 
             const ai = {
-                x: canvas.width - 15 - paddleWidth,
+                x: canvas.width - 25 - paddleWidth, // Placed exactly on the right edge
                 y: canvas.height / 2 - paddleHeight / 2,
                 width: paddleWidth,
                 height: paddleHeight,
                 score: 0,
-                speed: 3.5 
+                speed: 6.5 // Increased base speed since the map arena is much larger now
             };
 
             const ball = {
                 x: canvas.width / 2,
                 y: canvas.height / 2,
                 radius: ballRadius,
-                speed: 5,
-                velocityX: 5,
-                velocityY: 5
+                speed: 7,
+                velocityX: 7,
+                velocityY: 7
             };
+
+            // Recalculate size dynamically if you resize the window mid-game
+            window.addEventListener('resize', () => {
+                if (!gameActive) return;
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                ai.x = canvas.width - 25 - paddleWidth;
+                player.height = canvas.height * 0.18;
+                ai.height = canvas.height * 0.18;
+            });
 
             canvas.addEventListener('mousemove', (e) => {
                 const rect = canvas.getBoundingClientRect();
@@ -169,7 +183,7 @@
                 ball.x = canvas.width / 2;
                 ball.y = canvas.height / 2;
                 ball.velocityX = -ball.velocityX; 
-                ball.speed = 5; 
+                ball.speed = 7; 
             }
 
             function collision(b, p) {
@@ -185,8 +199,9 @@
                 if (player.y < 0) player.y = 0;
                 if (player.y > canvas.height - player.height) player.y = canvas.height - player.height;
 
+                // AI Predictive Tracking Logic
                 const aiTarget = ball.y - (ai.height / 2);
-                ai.y += (aiTarget - ai.y) * 0.12; 
+                ai.y += (aiTarget - ai.y) * 0.11; 
 
                 if (ai.y < 0) ai.y = 0;
                 if (ai.y > canvas.height - ai.height) ai.y = canvas.height - ai.height;
@@ -204,7 +219,7 @@
                     let direction = (ball.x < canvas.width / 2) ? 1 : -1;
                     ball.velocityX = direction * ball.speed * Math.cos(angleRad);
                     ball.velocityY = ball.speed * Math.sin(angleRad);
-                    ball.speed += 0.4;
+                    ball.speed += 0.5; // Speeds up with every bounce
                 }
 
                 if (ball.x - ball.radius < 0) {
@@ -220,25 +235,24 @@
 
             // Graphical Interface Drawing Execution
             function render() {
-                // Completely clear the board layout frame so the background video shows underneath
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-                // Draw translucent center dash dividing line
-                ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
+                // Draw fullscreen center dash dividing line
+                ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
                 ctx.lineWidth = 2;
-                ctx.setLineDash([10, 15]);
+                ctx.setLineDash([15, 20]);
                 ctx.beginPath();
                 ctx.moveTo(canvas.width / 2, 0);
                 ctx.lineTo(canvas.width / 2, canvas.height);
                 ctx.stroke();
                 ctx.setLineDash([]); 
 
-                // Draw left paddle (Human User)
-                ctx.fillStyle = "#4af";
+                // Draw left paddle (Human)
+                ctx.fillStyle = "rgba(74, 175, 255, 0.8)";
                 ctx.fillRect(player.x, player.y, player.width, player.height);
 
-                // Draw right paddle (Automated AI)
-                ctx.fillStyle = "#ff4a4a";
+                // Draw right paddle (AI)
+                ctx.fillStyle = "rgba(255, 74, 74, 0.8)";
                 ctx.fillRect(ai.x, ai.y, ai.width, ai.height);
 
                 // Draw the white game ball
