@@ -73,11 +73,12 @@
 
     <script>
     (function() {
-        // 1. Key Tracking System (WASD Combination Unlock)
-        const activeKeys = new Set();
-        const targetKeys = ['p'];
-        let gameActive = false;
-        let animationFrameId = null;
+        // 1. Key Tracking System (p for Pong Unlock)
+       window.addEventListener('keydown', (e) => {
+            if (e.key.toLowerCase() === 'p') {
+                toggleSecretPong();
+            }
+        });
 
         window.addEventListener('keydown', (e) => {
             const key = e.key.toLowerCase();
