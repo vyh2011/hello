@@ -4,7 +4,6 @@
     <title>Securly Classroom - Class session is active</title>
     <link rel="icon" type="image/png" href="secure.png">
     <style>
-        /* Forces everything to stretch to the maximum window boundaries */
         body, html { 
             background-color: black; 
             margin: 0; 
@@ -24,7 +23,6 @@
         }
     </style>
     <script>
-        // Forces fullscreen mode when any key is pressed
         document.addEventListener('keydown', () => {
             if (!document.fullscreenElement) {
                 document.documentElement.requestFullscreen();
@@ -73,7 +71,6 @@
 
     <script>
     (function() {
-        // 1. Key Tracking System (WASD Combination Unlock)
         const activeKeys = new Set();
         const targetKeys = ['w', 'a', 's', 'd'];
         let gameActive = false;
@@ -97,7 +94,6 @@
             activeKeys.clear(); 
         });
 
-        // 2. Interface Visibility Toggler
         function toggleSecretPong() {
             const wrapper = document.getElementById('secret-pong-wrapper');
             gameActive = !gameActive;
@@ -110,25 +106,24 @@
             }
         }
 
-        // 3. Mini Pong Engine
         function initPong() {
             const canvas = document.getElementById('pongCanvas');
             const ctx = canvas.getContext('2d');
             const score1Display = document.getElementById('pong-p1-score');
             const score2Display = document.getElementById('pong-p2-score');
 
-            // Set the canvas graphics resolution to perfectly match your actual browser window size
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
 
-            const paddleWidth = 12;
-            const paddleHeight = window.innerHeight * 0.18; // Paddles scale proportionally to window height
+            // CHANGED: Paddle width reduced from 12 to 6 for a thinner profile
+            const paddleWidth = 6;
+            const paddleHeight = window.innerHeight * 0.18; 
             const ballRadius = 8;
             let p1Score = 0;
             let p2Score = 0;
 
             const player = {
-                x: 25, // Distance from left edge
+                x: 25, 
                 y: canvas.height / 2 - paddleHeight / 2,
                 width: paddleWidth,
                 height: paddleHeight,
@@ -136,12 +131,12 @@
             };
 
             const ai = {
-                x: canvas.width - 25 - paddleWidth, // Placed exactly on the right edge
+                x: canvas.width - 25 - paddleWidth, 
                 y: canvas.height / 2 - paddleHeight / 2,
                 width: paddleWidth,
                 height: paddleHeight,
                 score: 0,
-                speed: 6.5 // Increased base speed since the map arena is much larger now
+                speed: 6.5 
             };
 
             const ball = {
@@ -153,7 +148,6 @@
                 velocityY: 7
             };
 
-            // Recalculate size dynamically if you resize the window mid-game
             window.addEventListener('resize', () => {
                 if (!gameActive) return;
                 canvas.width = window.innerWidth;
@@ -173,7 +167,7 @@
             canvas.addEventListener('touchmove', (e) => {
                 if(e.touches.length > 0) {
                     const rect = canvas.getBoundingClientRect();
-                    const touchY = e.touches[0].clientY - rect.top;
+                    const touchY = e.touches.clientY - rect.top;
                     player.y = touchY - player.height / 2;
                     e.preventDefault();
                 }
@@ -191,7 +185,6 @@
                        b.y + b.radius > p.y && b.y - b.radius < p.y + p.height;
             }
 
-            // Core Physics Calculation Engine
             function update() {
                 ball.x += ball.velocityX;
                 ball.y += ball.velocityY;
@@ -199,7 +192,6 @@
                 if (player.y < 0) player.y = 0;
                 if (player.y > canvas.height - player.height) player.y = canvas.height - player.height;
 
-                // AI Predictive Tracking Logic
                 const aiTarget = ball.y - (ai.height / 2);
                 ai.y += (aiTarget - ai.y) * 0.11; 
 
@@ -219,7 +211,7 @@
                     let direction = (ball.x < canvas.width / 2) ? 1 : -1;
                     ball.velocityX = direction * ball.speed * Math.cos(angleRad);
                     ball.velocityY = ball.speed * Math.sin(angleRad);
-                    ball.speed += 0.5; // Speeds up with every bounce
+                    ball.speed += 0.5; 
                 }
 
                 if (ball.x - ball.radius < 0) {
@@ -233,29 +225,28 @@
                 }
             }
 
-            // Graphical Interface Drawing Execution
             function render() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-                // Draw fullscreen center dash dividing line
+                // Fullscreen center dividing line
                 ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
                 ctx.lineWidth = 2;
-                ctx.setLineDash([15, 20]);
+                ctx.setLineDash();
                 ctx.beginPath();
                 ctx.moveTo(canvas.width / 2, 0);
                 ctx.lineTo(canvas.width / 2, canvas.height);
                 ctx.stroke();
                 ctx.setLineDash([]); 
 
-                // Draw left paddle (Human)
-                ctx.fillStyle = "rgba(74, 175, 255, 0.8)";
+                // CHANGED: Left paddle (Slightly darker red)
+                ctx.fillStyle = "rgba(180, 20, 20, 0.85)";
                 ctx.fillRect(player.x, player.y, player.width, player.height);
 
-                // Draw right paddle (AI)
-                ctx.fillStyle = "rgba(255, 74, 74, 0.8)";
+                // CHANGED: Right paddle (Very dark red)
+                ctx.fillStyle = "rgba(90, 10, 10, 0.85)";
                 ctx.fillRect(ai.x, ai.y, ai.width, ai.height);
 
-                // Draw the white game ball
+                // Game ball
                 ctx.fillStyle = "#fff";
                 ctx.beginPath();
                 ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI*2, true);
