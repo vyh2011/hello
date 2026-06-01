@@ -48,7 +48,7 @@
         z-index: 2; 
         pointer-events: none; 
         font-family: monospace; 
-        color: #fff;
+        color: rgba(255, 255, 255, 0.5);
     ">
         <!-- Floating Score Board Overlay -->
         <div style="position: absolute; width: 100%; top: 40px; display: flex; justify-content: space-around; font-size: 48px; font-weight: bold; pointer-events: none; opacity: 0.8; text-shadow: 0 2px 4px rgba(0,0,0,0.6);">
@@ -104,7 +104,7 @@
 
             const paddleWidth = 6;
             const paddleHeight = window.innerHeight * 0.18; 
-            const ballRadius = 8;
+            const ballRadius = 10;
             let p1Score = 0;
             let p2Score = 0;
 
@@ -228,12 +228,12 @@
                 ctx.fillStyle = "rgba(180, 20, 20, 0.7)";
                 ctx.fillRect(player.x, player.y, player.width, player.height);
 
-                // Right paddle (Very dark red)
-                ctx.fillStyle = "rgba(90, 10, 10, 0.7)";
+                // Right paddle (Slightly darker red)
+                ctx.fillStyle = "rgba(180, 20, 20, 0.7)";
                 ctx.fillRect(ai.x, ai.y, ai.width, ai.height);
 
                 // Game ball
-                ctx.fillStyle = "#fff";
+                ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
                 ctx.beginPath();
                 ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI*2, true);
                 ctx.closePath();
